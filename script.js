@@ -87,13 +87,59 @@ function displayMovments(movements) {
 }
 displayMovments(account1.movements);
 
-function createUserNames(user) {
-  const userName = user
-    .toLowerCase()
-    .split(' ')
-    .map(user => user.charAt(0))
-    .join('');
-  return userName;
+//--------------------
+function calcBalance(acc) {
+  return acc.movements.reduce((acc, curr) => acc + curr, 0);
 }
-createUserNames(account1.owner);
-accounts.forEach(acc => createUserNames(acc.owner));
+
+function printBalance(acc) {
+  labelBalance.innerText = `${calcBalance(acc)}€`;
+}
+printBalance(account1);
+
+//--------------------
+function calcDeposit(acc) {
+  return acc.movements
+    .filter(mov => mov > 0)
+    .reduce((acc, curr) => acc + curr, 0);
+}
+function displayDeposit(acc) {
+  console.log();
+  labelSumIn.innerText = `${calcDeposit(acc)}€`;
+}
+
+function calcWithdrawal(acc) {
+  return acc.movements
+    .filter(mov => mov < 0)
+    .reduce((acc, curr, i, arr) => acc + curr, 0);
+}
+function displayWithdrawal(acc) {
+  labelSumOut.innerText = `${Math.abs(calcWithdrawal(acc))}€`;
+}
+
+function calcInterest(acc) {
+  return acc.movements
+    .filter(mov => mov > 0)
+    .map(deposit => (deposit * 1.2) / 100)
+    .filter(int => int >= 1)
+    .reduce((acc, curr) => acc + curr, 0);
+}
+function displayInterest(acc) {
+  labelSumInterest.innerText = `${calcInterest(acc)}€`;
+}
+displayDeposit(account1);
+displayWithdrawal(account1);
+displayInterest(account1);
+//------------------------
+function createUserNames(accs) {
+  accs.forEach(acc => {
+    acc.userName = acc.owner
+      .toLowerCase()
+      .split(' ')
+      .map(user => user.charAt(0))
+      .join('');
+  });
+}
+createUserNames(accounts);
+
+const eurUsd = 1.1;
