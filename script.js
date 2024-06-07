@@ -69,6 +69,7 @@ const currencies = new Map([
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
+
 function displayMovments(movements) {
   containerMovements.innerHTML = '';
   movements.forEach((mov, i) => {
@@ -85,17 +86,17 @@ function displayMovments(movements) {
     containerMovements.insertAdjacentHTML('afterbegin', movementsMarkup);
   });
 }
-displayMovments(account1.movements);
 
 //--------------------
 function calcBalance(acc) {
-  return acc.movements.reduce((acc, curr) => acc + curr, 0);
+  return balance;
 }
 
 function printBalance(acc) {
-  labelBalance.innerText = `${calcBalance(acc)}€`;
+  acc.balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
+
+  labelBalance.innerText = `${acc.balance}€`;
 }
-printBalance(account1);
 
 //--------------------
 function calcDeposit(acc) {
@@ -120,16 +121,14 @@ function displayWithdrawal(acc) {
 function calcInterest(acc) {
   return acc.movements
     .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100)
+    .map(deposit => (deposit * acc.interestRate) / 100)
     .filter(int => int >= 1)
     .reduce((acc, curr) => acc + curr, 0);
 }
 function displayInterest(acc) {
   labelSumInterest.innerText = `${calcInterest(acc)}€`;
 }
-displayDeposit(account1);
-displayWithdrawal(account1);
-displayInterest(account1);
+
 //------------------------
 function createUserNames(accs) {
   accs.forEach(acc => {
@@ -141,5 +140,57 @@ function createUserNames(accs) {
   });
 }
 createUserNames(accounts);
+function updateUI(acc) {
+  displayMovments(acc.movements);
+  printBalance(acc);
+  displayDeposit(acc);
+  displayWithdrawal(acc);
+  displayInterest(acc);
+}
+function doingTransfer(acc) {
+  btnTransfer.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    const amount = Number(inputTransferAmount.value);
+    const reciverAcc = accounts.find(
+      acc => acc.userName === inputTransferTo.value
+    );
+
+    inputTransferTo.value = inputTransferAmount.value = '';
+    inputTransferTo.blur();
+
+    if (
+      reciverAcc &&
+      acc.balance >= amount &&
+      reciverAcc?.userName !== acc.userName &&
+      amount > 0
+    ) {
+      acc.movements.push(-amount);
+      reciverAcc.movements.push(amount);
+
+      updateUI(acc);
+    }
+    //
+  });
+}
+
+let currAcc;
+
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+  currAcc = accounts.find(acc => acc.userName === inputLoginUsername.value);
+
+  if (currAcc?.pin === Number(inputLoginPin.value)) {
+    labelWelcome.textContent = `welcome back ${currAcc.owner.split(' ')[0]}`;
+
+    containerApp.style.opacity = 1;
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    updateUI(currAcc);
+
+    doingTransfer(currAcc);
+  }
+});
 
 const eurUsd = 1.1;
